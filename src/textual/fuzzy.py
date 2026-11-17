@@ -36,8 +36,8 @@ class FuzzySearch:
         """
 
         self.case_sensitive = case_sensitive
-        self.cache: LRUCache[tuple[str, str], tuple[float, Sequence[int]]] = LRUCache(
-            cache_size
+        self.cache: LRUCache[tuple[str, str, bool], tuple[float, Sequence[int]]] = (
+            LRUCache(cache_size)
         )
 
     def match(self, query: str, candidate: str) -> tuple[float, Sequence[int]]:
@@ -51,7 +51,7 @@ class FuzzySearch:
             A pair of (score, tuple of offsets). `(0, ())` for no result.
         """
 
-        cache_key = (query, candidate)
+        cache_key = (query, candidate, self.case_sensitive)
         if cache_key in self.cache:
             return self.cache[cache_key]
         default: tuple[float, Sequence[int]] = (0.0, [])
@@ -172,7 +172,7 @@ class Matcher:
         self._query = query
         self._match_style = Style(reverse=True) if match_style is None else match_style
         self._case_sensitive = case_sensitive
-        self.fuzzy_search = FuzzySearch()
+        self.fuzzy_search = FuzzySearch(case_sensitive=case_sensitive)
 
     @property
     def query(self) -> str:

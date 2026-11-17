@@ -1,5 +1,5 @@
 from textual.content import Span
-from textual.fuzzy import Matcher
+from textual.fuzzy import FuzzySearch, Matcher
 from textual.style import Style
 
 
@@ -37,3 +37,23 @@ def test_highlight():
         Span(9, 10, Style(reverse=True)),
         Span(10, 11, Style(reverse=True)),
     ]
+
+
+def test_matcher_honors_case_sensitivity():
+    """The matcher should pass its case sensitivity to the fuzzy search."""
+    case_sensitive = Matcher("foo", case_sensitive=True)
+    case_insensitive = Matcher("foo")
+
+    assert case_sensitive.match("FOO") == 0
+    assert case_sensitive.match("foo") > 0
+    assert case_insensitive.match("FOO") > 0
+
+
+def test_case_sensitivity_changes_cache_key():
+    """Regression test for #6775: cached results are case-mode specific."""
+    fuzzy_search = FuzzySearch()
+    assert fuzzy_search.match("foo", "FOO")[0] > 0
+
+    fuzzy_search.case_sensitive = True
+
+    assert fuzzy_search.match("foo", "FOO")[0] == 0
